@@ -1,0 +1,20 @@
+# Optional: start the collector shortly before the regular session open.
+#
+# The service is a long-running process that manages its own session window,
+# so the timer is only useful if you prefer not to keep it running overnight.
+# Enable EITHER the service (always on) OR this timer, not both.
+#
+#   sudo cp deployment/tradier-collector.timer /etc/systemd/system/
+#   sudo systemctl enable --now tradier-collector.timer
+
+[Unit]
+Description=Start the Tradier 0DTE collector before the session open
+
+[Timer]
+# 09:20 America/New_York, DST-aware (systemd resolves the zone itself).
+OnCalendar=Mon-Fri 09:20 America/New_York
+Persistent=true
+Unit=tradier-collector.service
+
+[Install]
+WantedBy=timers.target

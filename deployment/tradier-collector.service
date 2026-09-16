@@ -1,0 +1,53 @@
+# Tradier 0DTE collector.
+#
+# Placeholders to replace before installing:
+#   __USER__      the non-root service account, e.g. collector
+#   __GROUP__     its primary group, e.g. collector
+#   __APP_DIR__   the checkout, e.g. /opt/tradier-0dte-collector
+#
+# Install:
+#   sudo cp deployment/tradier-collector.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now tradier-collector.service
+
+[Unit]
+Description=Tradier 0DTE options data collector
+Documentation=file://__APP_DIR__/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+Group=__GROUP__
+WorkingDirectory=__APP_DIR__
+
+# Secrets live outside the unit file and outside git.
+EnvironmentFile=__APP_DIR__/.env
+Environment=PYTHONUNBUFFERED=1
+
+ExecStart=__APP_DIR__/.venv/bin/python __APP_DIR__/main.py
+
+Restart=on-failure
+RestartSec=10
+# Do not give up on a symbol-day because of a burst of failures.
+StartLimitIntervalSec=0
+
+# The collector is stateless apart from its data directory; stop it politely
+# so the current cycle can finish and the health file can be written.
+KillSignal=SIGTERM
+TimeoutStopSec=90
+
+# Hardening: no inbound ports, no privileges, minimal filesystem access.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__APP_DIR__/data __APP_DIR__/logs
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

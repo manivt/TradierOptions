@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.idea/*.iml
+
+# Data files (large parquet files)
+data/*.parquet
+
+# Model files
+*.joblib
+*.pkl
+*.pickle
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local config
+.env
+*.local
+
+# Local data files
+candidates.txt
+output/
+*.xlsm
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.cache/
+# Collector artefacts
+data/
+backup/
+logs/
+*.parquet
+*.corrupt-*
+
+# Local .env backups (never commit)
+.env.bak-*

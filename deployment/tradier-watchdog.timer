@@ -1,0 +1,21 @@
+# Run the watchdog every 10 minutes during the trading day.
+# The watchdog itself is calendar-aware: outside a session it exits 0.
+#
+#   sudo cp deployment/tradier-watchdog.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now tradier-watchdog.timer
+
+[Unit]
+Description=Periodic health check for the Tradier 0DTE collector
+
+[Timer]
+# Every 10 minutes, 09:00-16:50 New York time.  The timezone suffix needs
+# systemd >= 250 (Debian 12 ships 252); on older systemd, set the VM
+# timezone to America/New_York and drop the suffix.
+OnCalendar=Mon-Fri 09..16:00/10 America/New_York
+Persistent=false
+AccuracySec=30s
+Unit=tradier-watchdog.service
+
+[Install]
+WantedBy=timers.target
