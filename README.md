@@ -6,7 +6,7 @@ built on the Tradier market-data API.
 **This is a market-data collector only.**  There is no trading, no order
 placement, no strategy logic and no modelling code.
 
-[![tests](https://img.shields.io/badge/tests-195%20passing-brightgreen)](tests/)
+[![tests](https://img.shields.io/badge/tests-196%20passing-brightgreen)](tests/)
 [![coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)](#development)
 [![ruff](https://img.shields.io/badge/ruff-clean-brightgreen)](#development)
 [![mypy](https://img.shields.io/badge/mypy-strict%20clean-brightgreen)](#development)
@@ -22,7 +22,7 @@ placement, no strategy logic and no modelling code.
 | [`docs/wiki/18-failure-modes.md`](docs/wiki/18-failure-modes.md) | symptom to diagnosis to action |
 | [`RELEASE_REVIEW.md`](RELEASE_REVIEW.md) | release gate, deployment and QA checklists |
 | [`research/README.md`](research/README.md) | the downstream research pipeline |
-| [`deployment/README.md`](deployment/README.md) | e2-micro and systemd install steps |
+| [`deployment/README.md`](deployment/README.md) | Oracle Linux / systemd install steps |
 
 ## What it does
 
@@ -87,6 +87,12 @@ uv run python watchdog.py
 uv run python backup.py --all-complete-days
 ```
 
+`backup.py` creates a verified **local** copy only. It is not yet scheduled and
+is not an off-VM backup. The planned next step, after several successful live
+days, is a checksum-verified, catch-up-safe pull of completed-day backups to an
+always-on Linux desktop. See
+[`docs/wiki/13-validation-and-backup.md`](docs/wiki/13-validation-and-backup.md).
+
 ## Configuration
 
 All settings come from `.env`; see `.env.example`.  `TRADIER_API_TOKEN` is
@@ -137,7 +143,7 @@ See `tradier_collector/market_clock.py` and `RELEASE_REVIEW.md`.
 ## Development
 
 ```bash
-uv run pytest -q          # 195 tests
+uv run pytest -q          # 196 tests
 uv run pytest --cov       # 92% coverage
 uv run ruff check .
 uv run mypy .
@@ -152,8 +158,25 @@ Before changing anything, read [`CLAUDE.md`](CLAUDE.md) and
 
 ## Status
 
-All offline checks pass and the restart/data-integrity paths have been reviewed
-and covered by tests.  The live API path has not been exercised from the
-development machine: run the smoke test and a bounded `--max-cycles` run on the
-target VM before enabling the service.  Open question: the option session end on
-NYSE half days, see [`docs/wiki/05-market-clock.md`](docs/wiki/05-market-clock.md).
+The verified production deployment is an Oracle Cloud Always Free Ampere A1
+Oracle Linux VM. The live Tradier smoke test succeeded for SPY, QQQ and IWM,
+and the first production day (2026-09-17) passed structural validation: sticky
+tracking, timestamp alignment, duplicate checks and quote coverage all passed.
+
+That day contains 405 of 406 expected one-minute samples per ticker (99.75%).
+The missing sample was the 09:30 ET opening boundary, caused by a sub-second
+late wake-up after the overnight sleep. The current source includes a tested
+five-second opening-boundary tolerance and stale-wake-up guard; pull and restart
+the VM service before relying on the fix. The 2026-09-17 data remains usable but
+should be treated as having one known gap.
+
+Vendor Greeks are intentionally retained with their own timestamp. A spot check
+showed complete core quote/Greek fields at 11:00 ET, while Tradier's Greeks
+timestamp was about 61 minutes older than the poll; that provenance is preserved
+rather than hidden. Locally calculated `model_*` Greeks and automatic off-VM
+backups are planned offline follow-up work, not current collector behavior.
+
+See [`docs/wiki/15-deployment-operations.md`](docs/wiki/15-deployment-operations.md)
+for the operational record and
+[`docs/wiki/19-limitations-and-future-work.md`](docs/wiki/19-limitations-and-future-work.md)
+for intentionally deferred work.
