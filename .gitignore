@@ -79,3 +79,4 @@ logs/
 
 # Local .env backups (never commit)
 .env.bak-*
+*.key

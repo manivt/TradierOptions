@@ -16,7 +16,8 @@ years.
 
 ```text
 /opt/tradier-0dte-collector        __APP_DIR__
-  .venv/bin/python                 created by uv sync
+  .uv-python/                      uv-managed Python, kept outside $HOME
+  .venv/bin/python                 created by uv sync, resolves into .uv-python
   .env                             chmod 600, never in git
   data/  logs/                     the only writable paths in the unit
 ```
@@ -35,8 +36,14 @@ anywhere in the repository.
 | `tradier-watchdog.timer` | every 10 minutes, 09:00-16:50 ET |
 
 Hardening in the service: `NoNewPrivileges`, `PrivateTmp`, `ProtectSystem=strict`,
-`ProtectHome`, `ReadWritePaths` limited to `data/` and `logs/`,
+`ProtectHome=true`,
+`ReadWritePaths` limited to `data/` and `logs/`,
 `RestrictAddressFamilies=AF_INET AF_INET6`.
+
+The deployment guide installs uv's managed Python under `__APP_DIR__/.uv-python`
+and builds `.venv` from it. This is required: a default uv installation can make
+`.venv/bin/python` resolve through `~/.local/share/uv`, which is intentionally
+hidden by `ProtectHome=true` and can also be blocked by SELinux on Oracle Linux.
 
 `TimeoutStopSec=90` exists because a graceful stop finishes the in-flight cycle
 and writes the final health file; stopping earlier would leave the day
