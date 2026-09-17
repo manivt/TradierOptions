@@ -42,6 +42,8 @@ TimeoutStopSec=90
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
+# The deployment guide installs uv's managed interpreter under __APP_DIR__ so
+# the virtual environment never resolves through the service user's home.
 ProtectHome=true
 ReadWritePaths=__APP_DIR__/data __APP_DIR__/logs
 ProtectKernelTunables=true

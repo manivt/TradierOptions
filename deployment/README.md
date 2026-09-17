@@ -43,17 +43,50 @@ sudo chown collector:collector /opt/tradier-0dte-collector
 sudo -u collector git clone <your-repo> /opt/tradier-0dte-collector
 cd /opt/tradier-0dte-collector
 
-# uv is the project standard; pip works too.
+# uv is the project standard.  Keep its managed Python below the application
+# directory: systemd hides the service user's home directory for hardening.
 sudo -u collector curl -LsSf https://astral.sh/uv/install.sh | sudo -u collector sh
-sudo -u collector /home/collector/.local/bin/uv sync
+sudo -u collector mkdir -p /opt/tradier-0dte-collector/.uv-python
+sudo -u collector env UV_PYTHON_INSTALL_DIR=/opt/tradier-0dte-collector/.uv-python \
+    /home/collector/.local/bin/uv python install \
+    --install-dir /opt/tradier-0dte-collector/.uv-python 3.12
+sudo -u collector env UV_PYTHON_INSTALL_DIR=/opt/tradier-0dte-collector/.uv-python \
+    /home/collector/.local/bin/uv sync --frozen
 
 sudo -u collector cp .env.example .env
 sudo -u collector nano .env          # paste the Tradier token
 sudo chmod 600 .env
 ```
 
-`uv sync` creates `.venv` inside the checkout, which is what the unit files
-reference (`__APP_DIR__/.venv/bin/python`).
+`uv sync` creates `.venv` inside the checkout, and its interpreter resolves
+under `__APP_DIR__/.uv-python/` rather than `~/.local`. This is required by
+the hardened systemd unit (`ProtectHome=true`).
+
+### Oracle Cloud Ampere A1 / Oracle Linux
+
+The same service units work on ARM64. Use the existing non-root `opc` user and
+the Oracle Linux package manager; substitute `opc` for `collector` in the
+commands above:
+
+```bash
+sudo dnf install -y git curl
+sudo mkdir -p /opt/tradier-0dte-collector
+sudo chown opc:opc /opt/tradier-0dte-collector
+sudo -u opc git clone <your-repo> /opt/tradier-0dte-collector
+cd /opt/tradier-0dte-collector
+
+sudo -u opc curl -LsSf https://astral.sh/uv/install.sh | sudo -u opc sh
+sudo -u opc mkdir -p /opt/tradier-0dte-collector/.uv-python
+sudo -u opc env UV_PYTHON_INSTALL_DIR=/opt/tradier-0dte-collector/.uv-python \
+    /home/opc/.local/bin/uv python install \
+    --install-dir /opt/tradier-0dte-collector/.uv-python 3.12
+sudo -u opc env UV_PYTHON_INSTALL_DIR=/opt/tradier-0dte-collector/.uv-python \
+    /home/opc/.local/bin/uv sync --frozen
+```
+
+For the unit placeholders, use `__USER__=opc`, `__GROUP__=opc`, and
+`__APP_DIR__=/opt/tradier-0dte-collector`. No inbound ports other than a
+restricted SSH rule are needed.
 
 ## 4. Verify before enabling the service
 

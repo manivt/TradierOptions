@@ -80,7 +80,8 @@ Separate processes: `watchdog.py` (silent-failure detection), `qa_report.py`
 ## Deployment checklist
 
 - [ ] Non-root service account created; `.env` is `chmod 600` and not in git.
-- [ ] `uv sync` completed; `.venv/bin/python` exists at the path in the units.
+- [ ] `uv sync --frozen` completed; `.venv/bin/python` resolves under
+      `__APP_DIR__/.uv-python/`, not the service user's `~/.local`.
 - [ ] `scripts/smoke_test_tradier.py` passes against the live API.
 - [ ] `main.py --max-cycles 3` writes files under `data/`.
 - [ ] Placeholders replaced in both unit files.

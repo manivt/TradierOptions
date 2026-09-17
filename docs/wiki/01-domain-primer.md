@@ -53,10 +53,10 @@ are human-readable when eyeballing data.
 ## Sessions and early closes
 
 Regular equity session 09:30-16:00 ET; ETF options trade until 16:15 ET, which
-is the collector default close.  NYSE half days close at 13:00 ET.  Whether ETF
-options keep the extra 15 minutes on half days is genuinely ambiguous in
-published schedules, so it is a configurable rule.  See
-[05 - Market clock](05-market-clock.md).
+is the collector default close. NYSE half days close at 13:00 ET. Cboe's
+published early-close hours differ by venue (13:00 ET for BZX/C2/EDGX and
+13:15 ET for C1); the collector's configurable default preserves the later
+consolidated-quote window. See [05 - Market clock](05-market-clock.md).
 
 ## Vendor greeks vs model greeks
 
