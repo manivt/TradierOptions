@@ -79,6 +79,7 @@ def test_no_cumulative_drift_when_cycles_are_slow(settings: Settings) -> None:
     deltas = {
         (b - a).total_seconds() for a, b in zip(stamps, stamps[1:], strict=False)
     }
+    assert stamps[0] == SESSION_OPEN
     assert deltas == {60.0}
 
 
@@ -102,6 +103,11 @@ def test_starting_before_the_open_waits(settings: Settings) -> None:
     scheduler = make_scheduler(settings, fake)
     scheduler.run(max_cycles=1, install_signals=False)
     assert fake.now >= SESSION_OPEN
+
+    from tradier_collector.storage import load_option_day
+
+    frame = load_option_day(settings.data_dir, "SPY", SESSION_OPEN.date())
+    assert set(frame["poll_timestamp_utc"]) == {SESSION_OPEN}
 
 
 def test_starting_after_the_close_waits_for_the_next_session(settings: Settings) -> None:

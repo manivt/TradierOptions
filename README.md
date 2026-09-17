@@ -122,18 +122,17 @@ names (see `research/README.md`).
 
 ## Early closes
 
-On NYSE half days the equity market closes at 13:00 ET.  Published schedules
-are not unambiguous about whether ETF options keep the extra 15 minutes they
-get on a regular day (16:00 equity close, 16:15 option close), and
-`exchange_calendars` models the equity session only.  The collector therefore
-uses an explicit, configurable rule:
+On NYSE half days the equity market closes at 13:00 ET. Cboe's 2026 schedule
+lists a 13:00 ET close for BZX, C2 and EDGX Options, while Cboe C1 materials
+list 13:15 ET. Because SPY, QQQ and IWM are multiply listed and Tradier returns
+consolidated quotes, the collector uses an explicit, configurable policy:
 
 ```text
 early-close option session end = XNYS equity close + EARLY_CLOSE_OPTION_EXTRA_MINUTES
 ```
 
-Default 15 minutes.  Set it to 0 to stop exactly at 13:00 ET.  See
-`tradier_collector/market_clock.py` and `RELEASE_REVIEW.md`.
+Default 15 minutes, preserving the C1 window; set it to 0 to stop at 13:00 ET.
+See `tradier_collector/market_clock.py` and `RELEASE_REVIEW.md`.
 
 ## Development
 

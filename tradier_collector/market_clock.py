@@ -15,13 +15,14 @@ Timezone policy
 
 Early closes
 ------------
-On NYSE half days (typically the day after Thanksgiving, Christmas Eve and
-July 3) the equity market closes at 13:00 ET instead of 16:00 ET.  On regular
-days, options on SPY/QQQ/IWM keep trading for 15 minutes after the equity
-close (16:15 ET).  Published exchange holiday schedules are not unambiguous
-about whether that same 15-minute extension applies on half days, and
-``exchange_calendars`` models the *equity* session only, so it cannot answer
-the question for us.
+On NYSE half days (typically the day after Thanksgiving and Christmas Eve)
+the equity market closes at 13:00 ET instead of 16:00 ET.  Cboe's 2026
+published holiday table lists a 13:00 ET early close for BZX, C2 and EDGX
+Options, while Cboe C1 documentation lists a 13:15 ET RTH end.  SPY, QQQ and
+IWM are multiply listed and Tradier returns consolidated quotes, so the
+collector intentionally uses the later bound by default.  ``exchange_calendars``
+models the *equity* session only, so this venue policy remains explicit and
+configurable.
 
 The rule implemented here is therefore explicit and configurable:
 

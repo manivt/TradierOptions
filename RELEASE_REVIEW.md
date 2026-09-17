@@ -43,9 +43,11 @@ Separate processes: `watchdog.py` (silent-failure detection), `qa_report.py`
 
 ## Known limitations
 
-1. **Early-close option hours are an assumption, not a fact.**  Default is
-   equity close + 15 minutes.  Verify against the Cboe holiday schedule before
-   the first half day and set `EARLY_CLOSE_OPTION_EXTRA_MINUTES` accordingly.
+1. **Early-close option hours are venue-dependent.** Cboe's 2026 schedules
+   show 13:00 ET for BZX/C2/EDGX Options and 13:15 ET for C1. The default
+   equity-close + 15 minutes preserves the later C1 session in consolidated
+   Tradier data; set `EARLY_CLOSE_OPTION_EXTRA_MINUTES=0` only if the 13:00
+   policy is intentional.
 2. **Read-modify-rewrite storage.**  Correct and atomic, but cost grows with
    file size through the day (tens of milliseconds per ticker per cycle at
    this volume).  At materially higher frequency, switch to partitioned
@@ -85,7 +87,8 @@ Separate processes: `watchdog.py` (silent-failure detection), `qa_report.py`
 - [ ] `systemctl enable --now tradier-collector.service` and the watchdog timer.
 - [ ] No inbound firewall rules added.
 - [ ] VM timezone irrelevant, but NTP enabled.
-- [ ] `EARLY_CLOSE_OPTION_EXTRA_MINUTES` decided before the next half day.
+- [ ] `EARLY_CLOSE_OPTION_EXTRA_MINUTES` reviewed against the desired venue
+      policy before the next half day.
 
 ## First-week QA checklist
 

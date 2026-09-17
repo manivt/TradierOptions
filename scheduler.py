@@ -160,16 +160,20 @@ class CollectorScheduler:
                         break
                     continue
 
-                if now < window.start_utc:
-                    logger.info(
-                        "Waiting for the %s session to open at %s",
-                        trading_date.isoformat(),
-                        window.start_utc.isoformat(),
-                    )
-                    self._sleep_until(window.start_utc)
-                    continue
-
-                boundary = self.clock.next_boundary(now)
+                if now <= window.start_utc:
+                    # The opening boundary is itself an intended sample.  In
+                    # particular, after an overnight wait ``now`` is exactly
+                    # 09:30:00; using ``next_boundary`` there would silently
+                    # skip the first of the expected daily cycles.
+                    if now < window.start_utc:
+                        logger.info(
+                            "Waiting for the %s session to open at %s",
+                            trading_date.isoformat(),
+                            window.start_utc.isoformat(),
+                        )
+                    boundary = window.start_utc
+                else:
+                    boundary = self.clock.next_boundary(now)
                 if boundary > window.end_utc:
                     # Nothing left to sample today.
                     self._sleep_until(window.end_utc + timedelta(seconds=1))

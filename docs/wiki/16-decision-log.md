@@ -20,7 +20,7 @@ only with the consequence column in view.
 | D11 | Local backup target only, behind a `BackupTarget` Protocol | The brief said not to implement GCS unless needed; the seam makes it a one-class change | Unnecessary cloud dependency and credentials on the VM |
 | D12 | Watchdog as a separate process | A hung collector cannot report its own failure | Silent failures go unnoticed until QA runs days later |
 | D13 | Expected cycles as an explicit timestamp list | Estimated counts hide holidays, half days and DST errors | Coverage percentages become unfalsifiable |
-| D14 | Early-close rule = equity close plus configurable minutes (default 15) | Published schedules are ambiguous for ETF options on half days; `exchange_calendars` models equities only | Either data lost at 13:00 or a hidden assumption nobody can find |
+| D14 | Early-close rule = equity close plus configurable minutes (default 15) | Cboe's 2026 schedules differ by venue (13:00 ET for BZX/C2/EDGX, 13:15 ET for C1); `exchange_calendars` models equities only | Either data lost from the later venue or a hidden venue policy nobody can find |
 | D15 | Underlying persisted before options | An options failure must not also cost the underlying series | One chain error loses two datasets instead of one |
 | D16 | `TRADIER_API_KEY` accepted as an alias | The repo already had a `.env` using that name | A working deployment breaks on first run for no benefit |
 | D17 | QA, watchdog and backup fall back to a synthetic token | Inspecting existing files must not require a live credential | Cannot run QA on an archive or on a machine without the token |

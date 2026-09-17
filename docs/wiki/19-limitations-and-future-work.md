@@ -7,10 +7,11 @@ Honest boundaries of the current implementation. Also summarised in
 
 ## Open questions
 
-1. **Early-close option hours** (highest priority). The rule is equity close
-   plus `EARLY_CLOSE_OPTION_EXTRA_MINUTES` (default 15). Confirm against the
-   Cboe holiday schedule before the next half day and set the value explicitly.
-   See [05 - Market clock](05-market-clock.md).
+1. **Early-close venue policy.** Cboe's 2026 schedules show a 13:00 ET close
+   for BZX/C2/EDGX and 13:15 ET for C1. The rule is equity close plus
+   `EARLY_CLOSE_OPTION_EXTRA_MINUTES` (default 15), preserving the later
+   consolidated-quote window. Revisit it if Tradier changes feed venues. See
+   [05 - Market clock](05-market-clock.md).
 2. **Live API path unverified in this environment.** The whole test suite is
    offline by design; `scripts/smoke_test_tradier.py` and a bounded
    `main.py --max-cycles 3` have not been run against the real API from this
@@ -38,7 +39,8 @@ greeks, a web server or any inbound network surface, and cloud storage.
 
 ## Natural next steps
 
-1. Decide the early-close rule; record the outcome in
+1. Reconfirm the early-close venue policy when Tradier changes its feed or an
+   exchange changes its schedule; record any change in
    [16 - Decision log](16-decision-log.md).
 2. Run the first-day and first-week QA procedures in `RELEASE_REVIEW.md`.
 3. Once weeks of data exist, build the feature-engineering layer described in

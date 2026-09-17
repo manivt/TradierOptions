@@ -41,11 +41,14 @@ The properties are read-only because `Settings` is a frozen dataclass.
 
 ## Early closes (the documented open question)
 
-`exchange_calendars` models the **equity** session only.  On NYSE half days it
-reports a 13:00 ET close.  On a regular day ETF options trade 15 minutes past
-the 16:00 equity close (16:15).  Published exchange schedules are not
-unambiguous about whether that same extension applies on half days, and the
-calendar library cannot answer it.
+`exchange_calendars` models the **equity** session only. On NYSE half days it
+reports a 13:00 ET close. Cboe's [2026 U.S. Options holiday
+schedule](https://www.cboe.com/about/hours/us-options) lists 13:00 ET for BZX,
+C2 and EDGX Options, while Cboe C1's [24/5 FAQ](https://www.cboe.com/document/tech-spec/document/technical-specifications/cboe-options-exchange-245-faq)
+lists 13:15 ET RTH on the Thanksgiving early-close Friday. SPY, QQQ and IWM are
+multiply listed and Tradier supplies consolidated quotes, so the collector
+deliberately uses the later 13:15 bound by default. The calendar library cannot
+express that venue policy.
 
 The implemented rule is explicit and configurable:
 
@@ -53,10 +56,9 @@ The implemented rule is explicit and configurable:
 early-close option session end = XNYS equity close + EARLY_CLOSE_OPTION_EXTRA_MINUTES
 ```
 
-Default 15 minutes.  Set it to `0` to stop exactly at 13:00 ET.  The default
-errs towards collecting *more*: polling a few minutes past the real option close
-costs nothing but repeated stale quotes, whereas stopping early loses real data
-permanently.  Confirm against the Cboe holiday schedule before the next half day.
+Default 15 minutes. Set it to `0` to restrict collection to the 13:00 ET venues.
+The default retains quotes from the C1 session through 13:15; review this policy
+if Tradier changes the venues included in its consolidated feed.
 
 ## Boundary arithmetic
 
