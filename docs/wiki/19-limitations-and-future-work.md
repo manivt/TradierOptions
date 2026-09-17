@@ -12,10 +12,10 @@ Honest boundaries of the current implementation. Also summarised in
    `EARLY_CLOSE_OPTION_EXTRA_MINUTES` (default 15), preserving the later
    consolidated-quote window. Revisit it if Tradier changes feed venues. See
    [05 - Market clock](05-market-clock.md).
-2. **Live API path unverified in this environment.** The whole test suite is
-   offline by design; `scripts/smoke_test_tradier.py` and a bounded
-   `main.py --max-cycles 3` have not been run against the real API from this
-   machine. Do both on the VM before enabling the service.
+2. **Opening-boundary wake-up race.** First live-day collection produced 405
+   rather than 406 samples because the OS resumed just after 09:30 ET. A
+   five-second tolerance plus stale-cycle guard is prepared and targeted tests
+   pass, but the revision must still be deployed to the VM.
 
 ## Known limitations
 
@@ -27,8 +27,8 @@ Honest boundaries of the current implementation. Also summarised in
 | Gap history | `largest_gap_minutes` across a restart relies on the health file | Parquet stays authoritative; `qa_report.py` recomputes from data |
 | Spot | Falls back to mid, then previous close; discovery skipped if none | Acceptable: a stale spot would pick the wrong ATM window |
 | Test coverage | 92%; argparse wiring of the `backup.py` and `watchdog.py` mains untested | Their logic is tested via `backup_day` and `check_day` |
-| Greeks | Vendor only; no model greeks | Deliberate - see `research/README.md` |
-| Backups | Local directory only | `BackupTarget` Protocol makes GCS a one-class addition |
+| Greeks | Vendor only; vendor timestamps can be older than a poll | Offline `model_*` enrichment may use py_vollib after time-to-expiry, rate and dividend conventions are specified |
+| Backups | Local directory only; no timer and no off-VM copy | After several successful days, implement a checksummed, catch-up-safe pull to the owner's Linux desktop; OCI Object Storage remains optional |
 | Metadata growth | Universe JSON rewritten on every discovery change | Small (hundreds of records); only an issue with far larger windows |
 
 ## Deliberately not implemented
@@ -42,12 +42,19 @@ greeks, a web server or any inbound network surface, and cloud storage.
 1. Reconfirm the early-close venue policy when Tradier changes its feed or an
    exchange changes its schedule; record any change in
    [16 - Decision log](16-decision-log.md).
-2. Run the first-day and first-week QA procedures in `RELEASE_REVIEW.md`.
-3. Once weeks of data exist, build the feature-engineering layer described in
+2. Allow several more trading days to complete, then implement and test the
+   off-VM desktop pull/restore workflow described in [13 - Validation and
+   backup](13-validation-and-backup.md).
+3. Deploy the tested opening-boundary scheduler revision before the next
+   session where 406/406 coverage is required.
+4. Once weeks of data exist, build the feature-engineering layer described in
    `research/README.md` as a **separate** package that reads `data/` - the
    collector should not grow research code.
-4. If durability becomes a concern, implement a GCS `BackupTarget`.
-5. If the universe grows substantially, revisit `DISCOVERY_INTERVAL_CYCLES`,
+5. Compare offline Black-Scholes-Merton `model_*` Greeks with stored
+   `tradier_*` values before using them for research.
+6. If durability becomes a concern beyond the desktop copy, implement an OCI
+   Object Storage `BackupTarget` and regularly test restores.
+7. If the universe grows substantially, revisit `DISCOVERY_INTERVAL_CYCLES`,
    batch size and the storage format together.
 
 Related: [16 - Decision log](16-decision-log.md), [02 - Invariants](02-invariants.md)

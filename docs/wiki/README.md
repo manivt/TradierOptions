@@ -30,7 +30,7 @@ Root map for agents: [`CLAUDE.md`](../../CLAUDE.md).
 | [12 - Health, QA, watchdog](12-health-qa-watchdog.md) | coverage accounting, silent failures | `health.py`, `qa_report.py`, `watchdog.py` |
 | [13 - Validation and backup](13-validation-and-backup.md) | proving stickiness, checksummed copies | `validate_dataset.py`, `backup.py` |
 | [14 - Testing](14-testing.md) | suite layout, fakes, what is proven | `tests/` |
-| [15 - Deployment and operations](15-deployment-operations.md) | e2-micro, systemd, runbook | `deployment/` |
+| [15 - Deployment and operations](15-deployment-operations.md) | Oracle A1 deployment, systemd, runbook | `deployment/` |
 
 ## Reference pages
 

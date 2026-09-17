@@ -40,6 +40,10 @@ logger = logging.getLogger(__name__)
 SLEEP_SLICE_SECONDS = 1.0
 #: Write the health file every N cycles so a watchdog sees live progress.
 HEALTH_WRITE_EVERY = 5
+#: ``sleep`` is not an exact alarm.  Accept a wake-up a few seconds after a
+#: scheduled boundary, but never label a substantially late request as an
+#: on-time sample (for example after a VM pause or long scheduling stall).
+BOUNDARY_GRACE = timedelta(seconds=5)
 
 
 class CollectorScheduler:
@@ -148,6 +152,7 @@ class CollectorScheduler:
         logger.info("Collector starting with configuration: %s", self.settings.redacted_summary())
 
         cycles_run = 0
+        last_scheduled_boundary: datetime | None = None
         try:
             while not self._stop and (max_cycles is None or cycles_run < max_cycles):
                 now = self._now()
@@ -160,11 +165,14 @@ class CollectorScheduler:
                         break
                     continue
 
-                if now <= window.start_utc:
+                if (
+                    now <= window.start_utc + BOUNDARY_GRACE
+                    and last_scheduled_boundary != window.start_utc
+                ):
                     # The opening boundary is itself an intended sample.  In
-                    # particular, after an overnight wait ``now`` is exactly
-                    # 09:30:00; using ``next_boundary`` there would silently
-                    # skip the first of the expected daily cycles.
+                    # particular, an overnight wake-up can occur a fraction
+                    # after 09:30:00; using ``next_boundary`` there would
+                    # silently skip the first expected daily cycle.
                     if now < window.start_utc:
                         logger.info(
                             "Waiting for the %s session to open at %s",
@@ -183,7 +191,17 @@ class CollectorScheduler:
                 if self.stopping:
                     break
 
+                woke_at = self._now()
+                if woke_at > boundary + BOUNDARY_GRACE:
+                    logger.warning(
+                        "Missed scheduled boundary %s by %.1fs; skipping stale cycle",
+                        boundary.isoformat(),
+                        (woke_at - boundary).total_seconds(),
+                    )
+                    continue
+
                 self._run_one_cycle(boundary, trading_date, cycles_run)
+                last_scheduled_boundary = boundary
                 cycles_run += 1
         finally:
             self._finalise_health()

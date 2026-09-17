@@ -51,7 +51,7 @@ fetched.  `TickerCollector._should_discover` always discovers when the universe
 is empty, otherwise every N cycles.  Because the universe is sticky, a skipped
 discovery can only *delay* picking up a brand-new strike - it can never lose an
 existing one.  That is what makes this knob safe to raise if rate limits or
-e2-micro CPU ever become a concern.
+small-VM CPU ever become a concern.
 
 If spot is unavailable this cycle, discovery is skipped entirely (there is no
 sensible ATM without a price) but the existing universe is still quoted.

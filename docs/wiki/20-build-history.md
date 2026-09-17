@@ -65,7 +65,23 @@ test.
 * A repository hook required a facts preamble before file writes during this
   session; irrelevant to the code, but it explains the commit-free build style.
 
-## What was not done
+## Production handoff and first live day
 
-No live API call was made from the build machine, so the first real request will
-happen on the VM. See [19 - Limitations](19-limitations-and-future-work.md).
+The target was changed from the initially considered Google e2-micro to an
+Oracle Cloud Always Free Ampere A1 Oracle Linux VM. `git`, uv and the repository
+were installed under `/opt/tradier-0dte-collector`. The initial systemd launch
+failed because `.venv/bin/python` resolved through the user's home-managed uv
+Python; an app-local `.uv-python` installation fixed that while retaining
+`ProtectHome=true`.
+
+The live smoke test then succeeded for SPY, QQQ and IWM. On 2026-09-17 the
+service collected a complete set of artefacts and end-of-day structural QA
+passed, with 405/406 timestamps for each ticker. That evidence uncovered the
+sub-second opening-boundary scheduler race documented in [06 - Scheduler](06-scheduler.md).
+The local correction and its focused scheduler test pass, but it has not yet
+been committed, pushed, or deployed as of this handoff.
+
+Off-VM backup, desktop catch-up synchronization, and locally calculated Greeks
+were intentionally deferred until the collector has accumulated several more
+live days. See [13 - Validation and backup](13-validation-and-backup.md) and
+[19 - Limitations](19-limitations-and-future-work.md).

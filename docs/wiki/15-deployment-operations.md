@@ -7,10 +7,12 @@ This page is the condensed operator view.
 
 ## Target
 
-Google Cloud e2-micro (2 vCPU burst, 1 GB RAM), Debian 12, Python 3.12, always
-on. Outbound HTTPS only - **no inbound ports**, because the project contains no
-web server. Roughly 5-15 MB per ticker-day compressed, so a 30 GB disk holds
-years.
+The verified production deployment is an Oracle Cloud Always Free Ampere A1
+instance running Oracle Linux on `aarch64`, with 5.5 GiB RAM, 4 GiB swap and a
+30 GiB root volume. Python 3.12 is managed by uv. Outbound HTTPS only - **no
+inbound ports**, because the project contains no web server. The same unit files
+remain portable to another systemd Linux VM, but the Oracle/Linux deployment is
+the one that has been exercised against the live API.
 
 ## Install shape
 
@@ -58,6 +60,47 @@ journalctl -u tradier-collector.service --since today | grep "cycle "
 systemctl restart tradier-collector.service
 systemctl list-timers tradier-watchdog.timer
 ```
+
+For Oracle Linux, confirm that the interpreter does not resolve through the
+service user's home directory:
+
+```bash
+cd /opt/tradier-0dte-collector
+readlink -f .venv/bin/python
+.venv/bin/python --version
+sudo systemctl is-active tradier-collector.service
+```
+
+The resolved Python path must be under `__APP_DIR__/.uv-python/`. If it points
+under `~/.local/share/uv`, rebuild the environment using the commands in
+`deployment/README.md`; `ProtectHome=true` deliberately hides that location
+from the service.
+
+## First live-day evidence (2026-09-17)
+
+The live Tradier smoke test succeeded for SPY, QQQ and IWM. The service ran
+under systemd across the session and wrote all expected artefact types:
+
+```text
+data/<TICKER>/options/YYYY-MM-DD.parquet
+data/<TICKER>/underlying/YYYY-MM-DD.parquet
+data/<TICKER>/metadata/YYYY-MM-DD_contracts.json
+data/health/YYYY-MM-DD.json
+```
+
+End-of-day validation passed the sticky-universe, late out-of-window contract,
+timestamp-alignment, duplicate, bid/ask coverage and vendor-Greeks-timestamp
+checks. Each ticker had 405 observed of 406 expected minute boundaries
+(99.75%). The common missing point was the opening 09:30 ET boundary, caused
+by a sub-second late wake-up after the overnight sleep; see [06 - Scheduler](06-scheduler.md).
+The day is usable but should be recorded as having one known gap, rather than
+described as perfectly complete.
+
+A targeted 11:00 ET SPY read confirmed 48 contracts (24 calls, 24 puts), no
+nulls in the core quote/size/volume/open-interest/Greek fields, and a
+261-millisecond underlying quote request. The vendor Greeks timestamp was
+about 61 minutes older than the poll timestamp; this is preserved provenance,
+not a collector failure.
 
 Application logs also land in `logs/collector.log` (7 daily rotating files).
 One line per cycle summarises ok/failed/skipped tickers, new contracts, tracked

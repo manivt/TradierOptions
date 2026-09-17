@@ -29,7 +29,7 @@ instantly and offline.
 
 Headers set once on the persistent session: `Authorization: Bearer <token>`,
 `Accept: application/json`, `Accept-Encoding: gzip`, a project user-agent.
-Connection reuse matters on an e2-micro polling every 60 seconds.
+Connection reuse matters on a small VM polling every 60 seconds.
 
 ## Response-shape normalisation (the subtle part)
 
@@ -68,7 +68,7 @@ same error type, so callers have exactly one exception to handle.
 It is in the "preferred dependencies" list in the original brief, but expressing
 "inspect the response headers, clamp `Retry-After`, log rate-limit state, stop at
 3" through `tenacity` is less readable than 40 lines of loop.  Keeping an unused
-dependency on an e2-micro is also waste.  Decision D5 in
+dependency on a small VM is also waste. Decision D5 in
 [16 - Decision log](16-decision-log.md).
 
 Related: [09 - Collection cycle](09-collection-cycle.md), [18 - Failure modes](18-failure-modes.md)

@@ -2,7 +2,7 @@
 
 [Index](README.md) | Prev: [05 - Market clock](05-market-clock.md) | Next: [07 - Expiration and discovery](07-expiration-and-discovery.md)
 
-Code: `scheduler.py`, `main.py` | Tests: `tests/test_scheduler.py` (12 tests)
+Code: `scheduler.py`, `main.py` | Tests: `tests/test_scheduler.py` (13 tests)
 
 ## Loop
 
@@ -12,8 +12,8 @@ while not stopping:
     day  = New York date
     win  = session_window(day)
     if win is None or now > win.end:      -> finalise health, sleep to next session
-    if now < win.start:                   -> sleep to the open
-    boundary = next_boundary(now)         -> strictly future, epoch-aligned
+    if at/just after unrun win.start:     -> use opening boundary
+    otherwise:                            -> next_boundary(now), strictly future
     if boundary > win.end:                -> sleep past the close, re-evaluate
     sleep_until(boundary)
     run_cycle(...)  with poll_timestamp = boundary
@@ -28,6 +28,21 @@ finishes.  Two consequences, both tested:
 
 `collect(); sleep(60)` is explicitly *not* used - it drifts by the processing
 time of every cycle, which would smear the sampling grid over a session.
+
+### Boundary wake-up tolerance
+
+An operating system sleep is not an exact alarm: an overnight wait can resume
+at `09:30:00.250`, rather than exactly at `09:30:00`. `BOUNDARY_GRACE` is five
+seconds. A wake-up in that short interval receives the intended opening
+timestamp, once only; `last_scheduled_boundary` prevents a duplicate opening
+cycle. A wake-up more than five seconds late is logged and skipped, rather than
+being written with a stale intended timestamp. This preserves the no-catch-up
+rule while preventing an avoidable first-cycle gap.
+
+The regression test starts its fake clock 250 ms after the open and asserts
+that the first two timestamps are 09:30 and 09:31. The implementation change
+was prepared after first live-day validation; deploy the revision to the VM
+before relying on it for a later session.
 
 ## Sleeping and signals
 

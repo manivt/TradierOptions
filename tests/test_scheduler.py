@@ -110,6 +110,20 @@ def test_starting_before_the_open_waits(settings: Settings) -> None:
     assert set(frame["poll_timestamp_utc"]) == {SESSION_OPEN}
 
 
+def test_waking_just_after_open_still_collects_opening_boundary(settings: Settings) -> None:
+    # A real OS sleep is allowed to wake slightly after its target.  This is
+    # the path used after the overnight wait in the production service.
+    fake = FakeTime(SESSION_OPEN + timedelta(milliseconds=250), work_seconds=1.0)
+    scheduler = make_scheduler(settings, fake)
+    scheduler.run(max_cycles=2, install_signals=False)
+
+    from tradier_collector.storage import load_option_day
+
+    frame = load_option_day(settings.data_dir, "SPY", SESSION_OPEN.date())
+    stamps = sorted(set(frame["poll_timestamp_utc"]))
+    assert stamps == [SESSION_OPEN, SESSION_OPEN + timedelta(minutes=1)]
+
+
 def test_starting_after_the_close_waits_for_the_next_session(settings: Settings) -> None:
     after_close = datetime(2026, 9, 15, 21, 0, tzinfo=UTC)
     fake = FakeTime(after_close)

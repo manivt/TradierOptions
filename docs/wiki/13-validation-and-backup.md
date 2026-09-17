@@ -55,4 +55,31 @@ Extensibility: `BackupTarget` is a `Protocol` with `store()` and `describe()`.
 means implementing that one interface and nothing else. GCS was deliberately not
 implemented (decision D11).
 
+## Operational backup status and next step
+
+As of the first live day, backups are **local only** and no backup timer is
+enabled. Do not describe the VM's `backup/` directory as off-VM protection.
+The chosen next step is intentionally deferred until several trading days have
+completed successfully: pull completed-day backups from the Oracle VM to the
+owner's always-on Linux desktop. That pull must be idempotent and catch up after
+a desktop restart (for example, `rsync` with checksums and a systemd timer with
+`Persistent=true`). It must copy only completed-day output and verify the
+manifest's SHA-256 digests after transfer.
+
+OCI Object Storage remains an optional off-VM alternative, but has not been
+configured, no bucket or credentials are stored by this repository, and no
+claim of automatic cloud backup should be made until it is implemented and a
+restore test passes.
+
+## Future model-Greeks enrichment
+
+The collector persists vendor values under `tradier_*`; it does not calculate
+model Greeks. A future **offline** enrichment job may calculate separate
+`model_*` fields from the stored bid/ask midpoint, spot, strike, option type,
+exact time to expiry, a documented risk-free rate source, and a documented
+dividend-yield assumption. It must preserve the raw Parquet files and vendor
+timestamps, define the 0DTE settlement convention explicitly, and emit null
+model values after expiry. It should first compare calculated values with the
+stored Tradier fields before becoming a production data product.
+
 Related: [08 - Sticky universe](08-sticky-universe.md), [15 - Deployment and operations](15-deployment-operations.md)

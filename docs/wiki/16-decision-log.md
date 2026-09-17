@@ -29,5 +29,8 @@ only with the consequence column in view.
 | D20 | Dependencies managed with `uv add` (pyproject plus uv.lock) | Owner's explicit instruction mid-build; reproducible resolution | Drifting environments between dev and the VM |
 | D21 | `expiration` stored as a `YYYY-MM-DD` string | One representation across Parquet, JSON metadata and logs | Consumers must special-case date32 versus string per artefact |
 | D22 | Health file rewritten every 5 cycles | A watchdog needs live progress, but not a write per cycle | Either a stale health view or needless IO |
+| D23 | Oracle Linux uses an app-local uv Python under `.uv-python` | A default uv venv can resolve through `~/.local/share/uv`, which `ProtectHome=true` and Oracle SELinux may block | A systemd service that works interactively but fails with `203/EXEC` |
+| D24 | Preserve vendor and future model Greeks side by side | Vendor values have their own freshness timestamp and model values depend on explicit assumptions | Research silently confuses a vendor field with a locally derived value |
+| D25 | Defer off-VM backup automation until live collection is proven | A few completed days provide real inputs for testing idempotent transfer and restore validation | Premature automation with untested credentials or incomplete-day copies |
 
 Related: [02 - Invariants](02-invariants.md), [19 - Limitations](19-limitations-and-future-work.md)
